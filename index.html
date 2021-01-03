@@ -5,17 +5,51 @@
   <meta name="viewport" content="width=device-width">
   <title>Platitudes</title>
   <script src="howler.core.js"></script>
-  <button onclick="myFunction()">Click me</button>
+  <button onclick="myFunction('dronestart')">Drone</button>
+  <button onclick="myFunction('mallets')">Mallets</button>
+  <button onclick="myFunction('chimes')">Chimes</button>
+  <button onclick="myFunction('bells')">Bells</button>
+  <button onclick="myFunction('guitar')">Guitar</button>
+  <button onclick="myOtherFunction('stop')">Stop!</button>
   <script>
-    function myFunction(){
-      console.log('I am working!');
-      var sound = new Howl({
-        src: ['sound.wav']  
-      }); 
+    var id1;
+    var id2;
+    var sound; 
+    var loopCounter = 0;
+    function myFunction(sprite){
+      sound = new Howl({
+        src: ['sound.wav'],
+        sprite: {
+          mallets: [0, 4000],
+          chimes: [4000, 4000],
+          bells: [8000, 8000],
+          guitar: [16000, 10000],
+          dronestart: [26000, 5735],
+          droneloop: [31735, 19063, true]
+          }
+      });
+      if (sprite === 'dronestart'){
+        id1 = sound.play(sprite);
+        sound.once('end', function(){
+          id1 = sound.play('droneloop');
+          sound.on('end', function(){
+            loopCounter++;
+            console.log(`The sprite defined as ${sprite} has played ${loopCounter} times!`);
+          });
+        });
+      }else{
+        id2 = sound.play(sprite);
+        sound.volume(0.5, id2)
+      }
+    }
+    function myOtherFunction(command){
+      if (command === 'stop'){
+        sound.stop(id1);
+        loopCounter = 0;
+      }
     }
   </script> 
 </head>
 <body>
-testing
 </body>
 </html>
