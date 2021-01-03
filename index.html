@@ -16,8 +16,7 @@
     var id2;
     var sound; 
     var loopCounter = 0;
-    function myFunction(sprite){
-      sound = new Howl({
+    sound = new Howl({
         src: ['sound.wav'],
         sprite: {
           mallets: [0, 4000],
@@ -28,7 +27,8 @@
           droneloop: [31735, 19063, true]
           }
       });
-      if (sprite === 'dronestart'){
+      function myFunction(sprite){
+        if (sprite === 'dronestart'){
         id1 = sound.play(sprite);
         sound.once('end', function(){
           id1 = sound.play('droneloop');
