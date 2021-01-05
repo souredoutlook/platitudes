@@ -1,22 +1,65 @@
+<style>
+  body{
+       width:100%;
+       height:100%;
+       font-size:100%;
+       padding:0;
+       margin:0;
+       overflow:hidden;
+       background:lightblue;
+       background:-moz-linear-gradient(-45deg,lightblue 0%,purple 100%);
+       background:-webkit-linear-gradient(-45deg,lightblue 0%, purple 100%);
+       background:linear-gradient(135deg, lightblue 0%, purple 100%);
+       filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#6a0dad,endColorstr=#add8e6,GradientType=1);
+       font-family:helvetica neue,futura,trebuchet ms,Arial;
+       -webkit-user-select:none;
+       user-select:none;
+       -webkit-tap-highlight-color:transparent
+  }
+  </style>
 <!DOCTYPE html>
+
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>Platitudes</title>
   <script src="howler.core.js"></script>
-  <button onclick="myFunction('dronestart')">Drone</button>
-  <button onclick="myFunction('mallets')">Mallets</button>
-  <button onclick="myFunction('chimes')">Chimes</button>
-  <button onclick="myFunction('bells')">Bells</button>
-  <button onclick="myFunction('guitar')">Guitar</button>
-  <button onclick="myOtherFunction('stop')">Stop!</button>
+  <style>
+    .button {
+    opacity: 0.6;
+    position: absolute;
+    right: 0%;
+    background-color: #ffffff00;
+    border: none;
+    color: white;
+    padding: 0%;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 72px;
+    margin: 0%;
+    cursor: pointer;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    }
+  </style>
+</head>
+<body>
+  <button class="button" id='button' onclick="buttonState(playMusic)">&#x1F507</button>
   <script>
-    var id1;
-    var id2;
+    const noises = ['mallets','chimes','bells']
+    var playMusic = true;
+    var id0; //special case for the initial, non-looping, drone sound
+    var id1; //define the three sound id's for drone, guitar, and effects respectively
+    var id2; 
+    var id3; 
     var sound; 
-    var loopCounter = 0;
-    sound = new Howl({
+    var loopCounter = 0;      // used for counting number of droone loops
+    var loopGoal = 1;         // used for defining the random number of drone loops required to trigger 
+    var elapsedTime = 0;     // used to store milliseconds since last guitar sound
+    var randomInterval= 0;     // used to store the random interval of milliseconds to play a guitar layer after
+    sound = new Howl({        //assign to sound using the source file and sprite definition
         src: ['sound.wav'],
         sprite: {
           mallets: [0, 4000],
@@ -27,29 +70,72 @@
           droneloop: [31735, 19063, true]
           }
       });
-      function myFunction(sprite){
-        if (sprite === 'dronestart'){
-        id1 = sound.play(sprite);
-        sound.once('end', function(){
-          id1 = sound.play('droneloop');
-          sound.on('end', function(){
-            loopCounter++;
-            console.log(`The sprite defined as ${sprite} has played ${loopCounter} times!`);
-          });
-        });
+
+     function playSound(sentSprite){ //main function for playing new sounds
+      if (sentSprite === 'dronestart'){
+        id0 = sound.play(sentSprite);
+        randomInterval = (((Math.floor(Math.random() * 17)) * 500) + 20000);
+        console.log(`Random interval is ${randomInterval}`);
+        sound.once('end',function(){soundscape(0);},id0);
+      }else if (sentSprite.includes('guitar')){
+        id2 = sound.play(sentSprite);
+        sound.volume(0.8, id2);
+        sound.once('end', function(){soundscape(2);}, id2);
       }else{
-        id2 = sound.play(sprite);
-        sound.volume(0.5, id2)
-      }
-    }
-    function myOtherFunction(command){
-      if (command === 'stop'){
-        sound.stop(id1);
+        id3 = sound.play(sentSprite);
+        sound.volume(0.4, id3);
         loopCounter = 0;
+        loopGoal = (Math.floor(Math.random() * 3)+2); 
+        sound.once('end', function(){soundscape(3);}, id3); 
       }
     }
+
+    function stopSound(command){    //stops sounds from playing
+      if (command === 'stop'){
+        sound.stop();
+        return loopCounter = 0;
+      }
+    }
+
+    function soundscape(id){        //this function controls the random nature of the sounscape
+      if (id === 0){
+        elapsedTime += 5735;
+        id1 = sound.play(('droneloop'))
+        //sound.off('end', function(){soundscape(0); id0})
+        sound.on('end',function(){soundscape(1);}, id1);
+      } else if (id === 1){
+        loopCounter += 1;
+        elapsedTime += 19063;
+        if (loopCounter >= loopGoal){    // checks to see if the loopcounter has counted up to the random loopGoal
+          console.log(`If is now time for noise.`);
+          playSound(noises[Math.floor(Math.random() * 3)]);
+        } else if (elapsedTime > randomInterval){
+          playSound('guitar');
+        }
+        console.log('One iteration of droneloop has finished playing')
+        console.log(`Loop counter is equal to ${loopCounter}`);
+        console.log(`Loop goal is equal to ${loopGoal}`);
+        console.log(`Random interval is equal to ${randomInterval}`);
+        console.log(`Elapsed time is equal to ${elapsedTime}`);
+      } else if (id === 2){
+        console.log('A guitar sound has finished playing');
+        //sound.off('end', function(){soundscape(2); id2})
+        elapsedTime = 0;
+        randomInterval = (((Math.floor(Math.random() * 17)) * 500) + 38000); // intentionally makes the possible interval longer
+      }else if(id === 3){
+        console.log('A random noise has finished playing');
+        //sound.off('end', function(){soundscape(3); id3})
+        if (elapsedTime > randomInterval){
+          playSound('guitar');
+        }
+      }
+    }
+    function buttonState(state){        //this function either plays sound or stops sound depending on the value of playMusic
+      state === true ? playSound('dronestart') : stopSound('stop');
+      state === true ? document.getElementById('button').innerHTML = '&#x1F50A' : document.getElementById('button').innerHTML = '&#x1F507';
+      return playMusic = !playMusic;
+    }
+
   </script> 
-</head>
-<body>
-</body>
+</body> 
 </html>
